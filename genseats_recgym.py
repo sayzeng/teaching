@@ -8,15 +8,10 @@ Created on Tue Feb 25 13:42:51 2020
 import string
 import pandas as pd
 
-a=list(string.ascii_uppercase[:-5])
-b=[1,3,4,6,7,9,10,12,13,15,16,18,19,21]
+letters = list(string.ascii_uppercase[:-5])
+numbers = [1,3,4,6,7,9,10,12,13,15,16,18,19,21]
 
-seats=[]
-for l in a:
-    seats.extend([l+str(n) for n in b])
+seats = pd.Series(l + str(n) for l in letters for n in numbers)
+print('Number of seats:', len(seats))
 
-len(seats)
-
-seats=pd.Series(seats)
-
-seats.to_excel('RecGym.xlsx',index=False)
+seats.to_excel('RecGym.xlsx', index=False)
