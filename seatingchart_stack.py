@@ -13,59 +13,51 @@ You choose:
     (2) number of side-by-side stacks
     (3) number of seating charts to generate
 
-Outputs: Excel spreadsheet titled 'chart_shaped.xlsx'
-
+Outputs: Excel spreadsheet with titled 'ROOM_shaped.xlsx'
 """
 
 import pandas as pd
 from pandas import ExcelWriter
-#from pandas import ExcelFile
 import numpy as np
 
-#Change 'chart.xlsx' to the file with your seat assignments in three columns: "Seat", "Last Name", "First Name".
-room='RecGym'
-seatassignments=room+'_tags.xlsx'
-#Choose the number of aggregated columns to display
-c=6
-#Choose number of seatingcharts to make
-n=4
+# Initiate parameters
+room = 'Center119'
+NUM_COLS = 6
+NUM_CHARTS = 4
 
-#Run the rest of this
-dfo=pd.read_excel(seatassignments, sheet_name='Sheet2')
-dfo=dfo[['Seat','Last Name', 'First Name']]
+# Load in seat assignments
+dfo = pd.read_excel(room + '_tags.xlsx', sheet_name='Sheet2')
+dfo = dfo[['Seat','Last Name', 'First Name']]
 dfo.dropna(inplace=True)
 
 def randseats(df):
+    """ Randomises seat assignments """
+    
     seats=df['Seat']
     names=df[['Last Name','First Name']]
     seats=seats.sample(frac=1).reset_index(drop=True)    
     return pd.concat([seats,names], axis=1)    
 
-def arrangetable(df):
-    df=randseats(df)
+def arrange_table(df, colCount):
+    """ Randomises seats and arranges into a table with colCount columns """
     
-    rows=df[df['Last Name'].notnull()]
-
-    x=len(rows)
-    r=int(x/c)+1
-    #r=48
-
-    jump=np.arange(0,x,r)
-    jump=np.append(jump,x)
-
-    df=pd.DataFrame()    
-    for i in range(0,c):
-        df=pd.concat([df, rows[jump[i]:jump[i+1]].reset_index(drop=True)], axis=1)
+    df = randseats(df)
+    rows = df[df['Last Name'].notnull()] # Removes unassigned seats
     
-    return df
+    agg_cols = np.array_split(rows, colCount)
+    for col in agg_cols:
+        col.reset_index(drop=True, inplace=True)
+    return pd.concat(agg_cols, axis=1)
 
-vno=list(map(str, range(1,n+1)))
-versions=['Sheet' + x for x in vno]
+# Set up Excel sheet names for each seating chart
+vno = list(map(str, range(1, NUM_CHARTS + 1)))
+versions = ['Sheet' + x for x in vno]
 
-writer=ExcelWriter(room+'_shaped.xlsx')
+# Create Excel spreadsheet with randomised seating charts
+writer = ExcelWriter(room + '_shaped.xlsx')
 for v in versions:
-    df=arrangetable(dfo)    
-    df.to_excel(writer,v,index=False)   
+    df = arrange_table(dfo, NUM_COLS)
+    df.to_excel(writer, v, index=False)   
 writer.save()
 
 print('Code complete')
